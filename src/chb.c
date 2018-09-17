@@ -142,6 +142,12 @@ static U8 chb_gen_hdr_ex(U8 *hdr, U8 *addr, U8 len, U16 fcf)
         *(U16 *)hdr_ptr = *(U16 *)addr;
         hdr_ptr += sizeof(U16);
     }
+    // set the source PAN unless PAN conression is enabled
+    if (!(fcf & FCF_PAN_COMPRES))
+    {
+        *(U16 *)hdr_ptr = 0xFFEF; //CHB_PAN_ID;
+        hdr_ptr += sizeof(U16);
+    }
 
     if (fcf & FCF_IEEE_SRC == FCF_IEEE_SRC)
     {
