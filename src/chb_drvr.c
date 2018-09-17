@@ -629,7 +629,13 @@ U8 chb_set_datarate(U8 rate)
     attempt.
 */
 /**************************************************************************/
+
 U8 chb_tx(U8 *hdr, U8 *data, U8 len)
+{
+    return chb_tx_ex(hdr,CHB_HDR_SZ + 1,data,len)
+}
+
+U8 chb_tx_ex(U8 *hdr,U8 hdr_len, U8 *data, U8 len)
 {
     U8 state = chb_get_state();
     pcb_t *pcb = chb_get_pcb();
@@ -650,7 +656,7 @@ U8 chb_tx(U8 *hdr, U8 *data, U8 len)
     }
 
     // write frame to buffer. first write header into buffer (add 1 for len byte), then data. 
-    chb_frame_write(hdr, CHB_HDR_SZ + 1, data, len);
+    chb_frame_write(hdr, hdr_len, data, len);
 
     //Do frame transmission. 
     pcb->trx_end = false;

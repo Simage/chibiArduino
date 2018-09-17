@@ -55,18 +55,18 @@ void chb_init()
     pcb.src_addr = chb_get_short_addr();
 
     // reset prev_seq and prev_src_addr to default values
-    // there's a problem if the radio gets re-initialized since no initializing the prev_seq and 
+    // there's a problem if the radio gets re-initialized since no initializing the prev_seq and
     // prev_src_addr will result in a bug where the data could get flagged as a dupe
     prev_seq = 0xFF;
-    prev_src_addr = 0xFFFE; 
+    prev_src_addr = 0xFFFE;
 
     // if SPI slave select pin is input, enable internal pullup on it.
     // otherwise it will constantly fall into spi slave mode and hang everything.
     // if not input, leave it alone.
-    if (!(DDRB & (1<<DDB2)))
+    if (!(DDRB & (1 << DDB2)))
     {
-        MCUCR &= ~(1<<PUD);
-        PORTB |= (1<<PORTB2);
+        MCUCR &= ~(1 << PUD);
+        PORTB |= (1 << PORTB2);
     }
 
     chb_drvr_init();
@@ -110,7 +110,53 @@ static U8 chb_gen_hdr(U8 *hdr, U16 addr, U8 len)
     hdr_ptr += sizeof(U16);
     *(U16 *)hdr_ptr = pcb.src_addr;
     hdr_ptr += sizeof(U16);
-    
+
+    // return the len of the header
+    return hdr_ptr - hdr;
+}
+
+static U8 chb_gen_hdr_ex(U8 *hdr, U8 *addr, U8 len, U16 fcf)
+{
+    U8 *hdr_ptr = hdr;
+
+    // The first Byte is the total frame size and is calculated after header generation is complete
+    hdr_ptr++;
+
+    // Set FCF flags
+    *(U16 *)hdr_ptr = fcf;
+    hdr_ptr += sizeof(U16);
+
+    *hdr_ptr++ = pcb.seq++;
+
+    // fill out dest pan ID, dest addr, src addr
+    *(U16 *)hdr_ptr = CHB_PAN_ID;
+    hdr_ptr += sizeof(U16);
+
+    if (fcf & FCF_IEEE_DEST == FCF_IEEE_DEST)
+    {
+        *(U64 *)hdr_ptr = *(U64 *)addr;
+        hdr_ptr += sizeof(U64);
+    }
+    else
+    {
+        *(U16 *)hdr_ptr = *(U16 *)addr;
+        hdr_ptr += sizeof(U16);
+    }
+
+    if (fcf & FCF_IEEE_SRC == FCF_IEEE_SRC)
+    {
+        chb_get_ieee_addr(hdr_ptr);
+        hdr_ptr += sizeof(U64);
+    }
+    else
+    {
+        *(U16 *)hdr_ptr = pcb.src_addr;
+        hdr_ptr += sizeof(U16);
+    }
+
+    // frame size = hdr sz + payload len + fcs len
+    hdr[0] = (hdr_ptr - hdr) + len + CHB_FCS_LEN;
+
     // return the len of the header
     return hdr_ptr - hdr;
 }
@@ -124,7 +170,7 @@ static U8 chb_gen_hdr(U8 *hdr, U16 addr, U8 len)
 U8 chb_write(U16 addr, U8 *data, U8 len)
 {
     U8 status, frm_len, hdr_len, hdr[CHB_HDR_SZ + 1];
-    
+
     while (len > 0)
     {
         // calculate which frame len to use. if greater than max payload, split
@@ -136,6 +182,53 @@ U8 chb_write(U16 addr, U8 *data, U8 len)
 
         // send data to chip
         status = chb_tx(hdr, data, frm_len);
+
+        if (status != CHB_SUCCESS)
+        {
+            switch (status)
+            {
+            case RADIO_SUCCESS:
+                // fall through
+            case CHB_SUCCESS_DATA_PENDING:
+                pcb.txd_success++;
+                break;
+
+            case CHB_NO_ACK:
+                pcb.txd_noack++;
+                break;
+
+            case CHB_CHANNEL_ACCESS_FAILURE:
+                pcb.txd_channel_fail++;
+                break;
+
+            default:
+                break;
+            }
+            return status;
+        }
+
+        // adjust len and restart
+        len = len - frm_len;
+    }
+
+    return CHB_SUCCESS;
+}
+
+U8 chb_write_ex(U8 *addr, U8 *data, U8 len, U16 fcf)
+{
+    U8 status, frm_len, hdr_len, hdr[CHB_EX_HDR_SZ + 1];
+
+    while (len > 0)
+    {
+        // calculate which frame len to use. if greater than max payload, split
+        // up operation.
+        frm_len = (len > CHB_MAX_PAYLOAD) ? CHB_MAX_PAYLOAD : len;
+
+        // gen frame header
+        hdr_len = chb_gen_hdr_ex(hdr, addr, frm_len, fcf);
+
+        // send data to chip
+        status = chb_tx_ex(hdr, hdr_len, data, frm_len);
 
         if (status != CHB_SUCCESS)
         {
@@ -183,20 +276,20 @@ U8 chb_read(chb_rx_data_t *rx)
 
     data_ptr = rx->data;
 
-    // first byte is always len. check it to make sure 
+    // first byte is always len. check it to make sure
     // we have a valid len byte.
     if ((len = chb_buf_read()) > CHB_MAX_FRAME_LENGTH)
     {
         return 0;
     }
 
-// TEST
-//    printf("%d, %d\n", len, chb_buf_get_len());
+    // TEST
+    //    printf("%d, %d\n", len, chb_buf_get_len());
 
     *data_ptr++ = len;
 
     // load the rest of the data into buffer
-    for (i=0; i<len; i++)
+    for (i = 0; i < len; i++)
     {
         *data_ptr++ = chb_buf_read();
     }
@@ -207,11 +300,11 @@ U8 chb_read(chb_rx_data_t *rx)
     // down so that only the payload will be in the buffer.
 
     // extract the sequence number
-    data_ptr = rx->data + 3;    // location of sequence number
+    data_ptr = rx->data + 3; // location of sequence number
     seq = *data_ptr;
 
     // parse the buffer and extract the dest and src addresses
-    data_ptr = rx->data + 6;                // location of dest addr
+    data_ptr = rx->data + 6; // location of dest addr
     rx->dest_addr = *(U16 *)data_ptr;
     data_ptr += sizeof(U16);
     rx->src_addr = *(U16 *)data_ptr;
@@ -228,13 +321,13 @@ U8 chb_read(chb_rx_data_t *rx)
     // to the front of the buffer. We want to capture the full frame so just keep the frame intact and return the length.
     return len;
 #else
-    // duplicate frame check (dupe check). we want to remove frames that have been already been received since they 
-    // are just retries. 
+    // duplicate frame check (dupe check). we want to remove frames that have been already been received since they
+    // are just retries.
     // note: this dupe check only removes duplicate frames from the previous transfer. if another frame from a different
     // node comes in between the dupes, then the dupe will show up as a received frame.
     if ((seq == prev_seq) && (rx->src_addr == prev_src_addr))
     {
-        // this is a duplicate frame from a retry. the remote node thinks we didn't receive 
+        // this is a duplicate frame from a retry. the remote node thinks we didn't receive
         // it properly. discard.
         return 0;
     }
@@ -250,5 +343,4 @@ U8 chb_read(chb_rx_data_t *rx)
     // finally, return the len of the payload
     return len - CHB_HDR_SZ - CHB_FCS_LEN;
 #endif
-
 }

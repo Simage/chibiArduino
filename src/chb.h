@@ -36,8 +36,10 @@
 
 #include "chibiUsrCfg.h"
 #include "types.h"
+#include "chb_fcf.h"
 
 #define CHB_HDR_SZ        9    // FCF + seq + pan_id + dest_addr + src_addr (2 + 1 + 2 + 2 + 2)
+#define CHB_EX_HDR_SZ     21   // FCF + seq + pan_id + dest_addr + src_addr (2 + 1 + 2 + 8 + 8)    
 #define CHB_FCS_LEN       2
 
 // frame_type = data
