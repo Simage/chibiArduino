@@ -632,7 +632,7 @@ U8 chb_set_datarate(U8 rate)
 
 U8 chb_tx(U8 *hdr, U8 *data, U8 len)
 {
-    return chb_tx_ex(hdr,CHB_HDR_SZ + 1,data,len)
+    return chb_tx_ex(hdr,CHB_HDR_SZ + 1,data,len);
 }
 
 U8 chb_tx_ex(U8 *hdr,U8 hdr_len, U8 *data, U8 len)
