@@ -145,7 +145,7 @@ uint8_t chibiTx(uint16_t addr, uint8_t *data, uint8_t len)
 
 uint8_t chibiTx(uint64_t addr, uint8_t *data, uint8_t len, uint16_t fcf)
 {
-    return chb_write_ex(&addr, (uint8_t *)data, len, fcf);
+    return chb_write_ex((uint8_t *)&addr, (uint8_t *)data, len, fcf);
 }
 
 /**************************************************************************/
