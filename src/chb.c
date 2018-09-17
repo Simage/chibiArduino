@@ -132,7 +132,7 @@ static U8 chb_gen_hdr_ex(U8 *hdr, U8 *addr, U8 len, U16 fcf)
     *(U16 *)hdr_ptr = CHB_PAN_ID;
     hdr_ptr += sizeof(U16);
 
-    if (fcf & FCF_IEEE_DEST == FCF_IEEE_DEST)
+    if ((fcf & FCF_DEST_ADDR) == FCF_IEEE_DEST)
     {
         *(U64 *)hdr_ptr = *(U64 *)addr;
         hdr_ptr += sizeof(U64);
@@ -149,7 +149,7 @@ static U8 chb_gen_hdr_ex(U8 *hdr, U8 *addr, U8 len, U16 fcf)
         hdr_ptr += sizeof(U16);
     }
 
-    if (fcf & FCF_IEEE_SRC == FCF_IEEE_SRC)
+    if ((fcf & FCF_SRC_ADDR) == FCF_IEEE_SRC)
     {
         chb_get_ieee_addr(hdr_ptr);
         hdr_ptr += sizeof(U64);
