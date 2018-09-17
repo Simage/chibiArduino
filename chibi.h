@@ -43,17 +43,16 @@
 
 // For handling Arduino 1.0 compatibility and backwards compatibility
 #if ARDUINO >= 100
-    #include "Arduino.h"
+#include "Arduino.h"
 #else
-    #include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 #include "chibiUsrCfg.h"
 #include "src/chb_fcf.h"
 
-
-#define BROADCAST_ADDR 0xFFFF
-#define IEEE_BROADCAST 0xFFFFFFFFFFFFFFFF
+#define BROADCAST_ADDR ((uint16_t)0xFFFF)
+#define IEEE_BROADCAST ((uint64_t)0xFFFFFFFFFFFFFFFF)
 
 void chibiInit();
 void chibiSetShortAddr(uint16_t addr);
@@ -63,7 +62,7 @@ void chibiGetIEEEAddr(uint8_t *ieee_addr);
 uint8_t chibiRegRead(uint8_t addr);
 void chibiRegWrite(uint8_t addr, uint8_t val);
 uint8_t chibiTx(uint16_t addr, uint8_t *data, uint8_t len);
-uint8_t chibiTx(uint64_t addr, uint8_t *data, uint8_t len,uint16_t fcf);
+uint8_t chibiTx(uint8_t *addr, uint8_t *data, uint8_t len, uint16_t fcf);
 uint8_t chibiDataRcvd();
 uint8_t chibiGetData(uint8_t *data);
 uint8_t chibiGetRSSI();
@@ -88,9 +87,8 @@ uint16_t chibiBufGetRemaining();
 void chibiAesTest(uint8_t *key);
 
 #if ((FREAKDUINO_LONG_RANGE == 1) || (SABOTEN == 1) || (ARASHI_ENET_GATEWAY_LR == 1) || (FREAKDUINO1284PLR == 1) || (FREAKUSB1284PLR == 1))
-    void chibiHighGainModeEnable();
-    void chibiHighGainModeDisable();
+void chibiHighGainModeEnable();
+void chibiHighGainModeDisable();
 #endif
 
 #endif
-
