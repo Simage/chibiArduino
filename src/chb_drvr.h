@@ -306,8 +306,7 @@ U8 chb_get_rand();
 void chb_set_mode();
 
 // data transmit
-U8 chb_tx(U8 *hdr, U8 *data, U8 len);
-U8 chb_tx_ex(U8 *hdr, U8 hdr_len, U8 *data, U8 len);
+U8 chb_tx(U8 *hdr, U8 hdr_len, U8 *data, U8 len);
 
 #if ((FREAKDUINO_LONG_RANGE == 1) || (SABOTEN == 1) || (FREAKDUINO1284PLR == 1) || (FREAKUSB1284PLR == 1) || (ARASHI_ENET_GATEWAY_LR == 1))
 void chb_high_gain_mode_enable();

@@ -234,7 +234,7 @@ U8 chb_write_ex(U8 *addr, U8 *data, U8 len, U16 fcf)
         hdr_len = chb_gen_hdr_ex(hdr, addr, frm_len, fcf);
 
         // send data to chip
-        status = chb_tx_ex(hdr, hdr_len, data, frm_len);
+        status = chb_tx(hdr, hdr_len, data, frm_len);
 
         if (status != CHB_SUCCESS)
         {
