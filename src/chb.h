@@ -98,7 +98,7 @@ typedef struct
 
 void chb_init();
 pcb_t *chb_get_pcb();
-U8 chb_write(U16 addr, U8 *data, U8 len);
+U8 chb_write(U8 *addr, U8 *data, U8 len, U16 fcf);
 U8 chb_read(chb_rx_data_t *rx);
 void chb_set_pan(U8 pan_id, U16 pan);
 U16 chb_get_pan(U8 pan_id);

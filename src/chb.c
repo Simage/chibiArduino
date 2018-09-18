@@ -85,39 +85,28 @@ pcb_t *chb_get_pcb()
 }
 
 /**************************************************************************/
+/*!
+    Get and set funtions to set the source and destination PAN
+*/
+/**************************************************************************/
+void chb_set_pan(U8 pan_id, U16 pan)
+{
+    networks[pan_id] = pan;
+}
+
+U16 chb_get_pan(U8 pan_id)
+{
+    return networks[pan_id];
+}
+
+/**************************************************************************/
 /*! 
-    Requires the dest addr, location to store data, and len of payload.
+    Requires the dest addr, location to store data, len of payload and the
+    frame control flags.
     Returns the length of the hdr. 
 */
 /**************************************************************************/
-static U8 chb_gen_hdr(U8 *hdr, U16 addr, U8 len)
-{
-    U8 *hdr_ptr = hdr;
-
-    // calc frame size and put in 0 position of array
-    // frame size = hdr sz + payload len + fcs len
-    *hdr_ptr++ = CHB_HDR_SZ + len + CHB_FCS_LEN;
-
-    // use default fcf byte 0 val but test for ack request. we won't request
-    // ack if broadcast. all other cases we will.
-    *hdr_ptr++ = CHB_FCF_BYTE_0 | ((addr != 0xFFFF) << CHB_ACK_REQ_POS);
-    *hdr_ptr++ = CHB_FCF_BYTE_1;
-
-    *hdr_ptr++ = pcb.seq++;
-
-    // fill out dest pan ID, dest addr, src addr
-    *(U16 *)hdr_ptr = CHB_PAN_ID;
-    hdr_ptr += sizeof(U16);
-    *(U16 *)hdr_ptr = addr;
-    hdr_ptr += sizeof(U16);
-    *(U16 *)hdr_ptr = pcb.src_addr;
-    hdr_ptr += sizeof(U16);
-
-    // return the len of the header
-    return hdr_ptr - hdr;
-}
-
-static U8 chb_gen_hdr_ex(U8 *hdr, U8 *addr, U8 len, U16 fcf)
+static U8 chb_gen_hdr(U8 *hdr, U8 *addr, U8 len, U16 fcf)
 {
     U8 *hdr_ptr = hdr;
 
@@ -175,54 +164,8 @@ static U8 chb_gen_hdr_ex(U8 *hdr, U8 *addr, U8 len, U16 fcf)
     address.
 */
 /**************************************************************************/
-U8 chb_write(U16 addr, U8 *data, U8 len)
-{
-    U8 status, frm_len, hdr_len, hdr[CHB_HDR_SZ + 1];
 
-    while (len > 0)
-    {
-        // calculate which frame len to use. if greater than max payload, split
-        // up operation.
-        frm_len = (len > CHB_MAX_PAYLOAD) ? CHB_MAX_PAYLOAD : len;
-
-        // gen frame header
-        hdr_len = chb_gen_hdr(hdr, addr, frm_len);
-
-        // send data to chip
-        status = chb_tx(hdr, data, frm_len);
-
-        if (status != CHB_SUCCESS)
-        {
-            switch (status)
-            {
-            case RADIO_SUCCESS:
-                // fall through
-            case CHB_SUCCESS_DATA_PENDING:
-                pcb.txd_success++;
-                break;
-
-            case CHB_NO_ACK:
-                pcb.txd_noack++;
-                break;
-
-            case CHB_CHANNEL_ACCESS_FAILURE:
-                pcb.txd_channel_fail++;
-                break;
-
-            default:
-                break;
-            }
-            return status;
-        }
-
-        // adjust len and restart
-        len = len - frm_len;
-    }
-
-    return CHB_SUCCESS;
-}
-
-U8 chb_write_ex(U8 *addr, U8 *data, U8 len, U16 fcf)
+U8 chb_write(U8 *addr, U8 *data, U8 len, U16 fcf)
 {
     U8 status, frm_len, hdr_len, hdr[CHB_EX_HDR_SZ + 1];
 
@@ -233,7 +176,7 @@ U8 chb_write_ex(U8 *addr, U8 *data, U8 len, U16 fcf)
         frm_len = (len > CHB_MAX_PAYLOAD) ? CHB_MAX_PAYLOAD : len;
 
         // gen frame header
-        hdr_len = chb_gen_hdr_ex(hdr, addr, frm_len, fcf);
+        hdr_len = chb_gen_hdr(hdr, addr, frm_len, fcf);
 
         // send data to chip
         status = chb_tx(hdr, hdr_len, data, frm_len);

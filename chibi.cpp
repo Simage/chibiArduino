@@ -140,12 +140,19 @@ void chibiRegWrite(uint8_t addr, uint8_t val)
 /**************************************************************************/
 uint8_t chibiTx(uint16_t addr, uint8_t *data, uint8_t len)
 {
-    return chb_write(addr, (uint8_t *)data, len);
+    return chb_write((uint8_t *)&addr, (uint8_t *)data, len, DEFAULT_FCF);
 }
+/**************************************************************************/
+/*!
+    overload of the previos function allowing operation with both 16 and 
+    64 bit addresses and various frame control options
+    Usage: send <addr> <char data array...>
+*/
+/**************************************************************************/
 
 uint8_t chibiTx(uint8_t *addr, uint8_t *data, uint8_t len, uint16_t fcf)
 {
-    return chb_write_ex(addr, (uint8_t *)data, len, fcf);
+    return chb_write(addr, (uint8_t *)data, len, fcf);
 }
 
 /**************************************************************************/
