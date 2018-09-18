@@ -42,7 +42,7 @@
 #include "chibi.h"
 
 // Including the actual "c" files rather than the headers. The Arduino lib only
-// recognizes one source file in the directory so all the source files need to look like
+// recognizes one source file in the directory so all the source files need to look like 
 // they're in the one file.
 #include "src/chb.c"
 #include "src/chb_buf.c"
@@ -53,9 +53,9 @@
 #include "src/chb_aes.c"
 
 #if (CHB_RX_POLLING_MODE)
-#include "src/chb_rx_poll.c"
+   #include "src/chb_rx_poll.c"
 #else
-#include "src/chb_rx_int.c"
+   #include "src/chb_rx_int.c"
 #endif
 
 // used to store info about received data
@@ -166,7 +166,7 @@ uint8_t chibiDataRcvd()
     pcb_t *pcb = chb_get_pcb();
 
 #if (CHB_RX_POLLING_MODE)
-    // need to poll for received data if we're not retrieving the data
+    // need to poll for received data if we're not retrieving the data 
     // in the ISR
     chb_rcv_poll();
 #endif
@@ -286,6 +286,7 @@ void chibiCmdPoll()
 void chibiCmdAdd(char *name, void (*func)(int argc, char **argv))
 {
     chb_cmd_add(name, func);
+
 }
 
 /**************************************************************************/
@@ -380,7 +381,7 @@ void chibiSetMode(uint8_t mode)
 /**************************************************************************/
 uint16_t chibiBufGetRemaining()
 {
-    return chb_buf_get_remaining();
+    return chb_buf_get_remaining(); 
 }
 
 /**************************************************************************/
@@ -403,24 +404,24 @@ uint16_t chibiGetPAN(panid_t panid)
     return chb_get_pan(panid);
 }
 
-#if ((FREAKDUINO_LONG_RANGE == 1) || (SABOTEN == 1) || (ARASHI_ENET_GATEWAY_LR == 1) || (FREAKDUINO1284PLR == 1) || (FREAKUSB1284PLR == 1))
-/**************************************************************************/
-/*!
+#if ((FREAKDUINO_LONG_RANGE == 1) || (SABOTEN == 1) || (ARASHI_ENET_GATEWAY_LR == 1) || (FREAKDUINO1284PLR == 1) || (FREAKUSB1284PLR == 1)) 
+    /**************************************************************************/
+    /*!
         
     */
-/**************************************************************************/
-void chibiHighGainModeEnable()
-{
-    chb_high_gain_mode_enable();
-}
+    /**************************************************************************/
+    void chibiHighGainModeEnable()
+    {
+        chb_high_gain_mode_enable();
+    }
 
-/**************************************************************************/
-/*!
+    /**************************************************************************/
+    /*!
         
     */
-/**************************************************************************/
-void chibiHighGainModeDisable()
-{
-    chb_high_gain_mode_disable();
-}
+    /**************************************************************************/
+    void chibiHighGainModeDisable()
+    {
+        chb_high_gain_mode_disable();
+    }
 #endif

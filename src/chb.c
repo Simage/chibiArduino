@@ -57,18 +57,18 @@ void chb_init()
     pcb.src_addr = chb_get_short_addr();
 
     // reset prev_seq and prev_src_addr to default values
-    // there's a problem if the radio gets re-initialized since no initializing the prev_seq and
+    // there's a problem if the radio gets re-initialized since no initializing the prev_seq and 
     // prev_src_addr will result in a bug where the data could get flagged as a dupe
     prev_seq = 0xFF;
-    prev_src_addr = 0xFFFE;
+    prev_src_addr = 0xFFFE; 
 
     // if SPI slave select pin is input, enable internal pullup on it.
     // otherwise it will constantly fall into spi slave mode and hang everything.
     // if not input, leave it alone.
-    if (!(DDRB & (1 << DDB2)))
+    if (!(DDRB & (1<<DDB2)))
     {
-        MCUCR &= ~(1 << PUD);
-        PORTB |= (1 << PORTB2);
+        MCUCR &= ~(1<<PUD);
+        PORTB |= (1<<PORTB2);
     }
 
     chb_drvr_init();
@@ -227,20 +227,20 @@ U8 chb_read(chb_rx_data_t *rx)
 
     data_ptr = rx->data;
 
-    // first byte is always len. check it to make sure
+    // first byte is always len. check it to make sure 
     // we have a valid len byte.
     if ((len = chb_buf_read()) > CHB_MAX_FRAME_LENGTH)
     {
         return 0;
     }
 
-    // TEST
-    //    printf("%d, %d\n", len, chb_buf_get_len());
+// TEST
+//    printf("%d, %d\n", len, chb_buf_get_len());
 
     *data_ptr++ = len;
 
     // load the rest of the data into buffer
-    for (i = 0; i < len; i++)
+    for (i=0; i<len; i++)
     {
         *data_ptr++ = chb_buf_read();
     }
@@ -251,11 +251,11 @@ U8 chb_read(chb_rx_data_t *rx)
     // down so that only the payload will be in the buffer.
 
     // extract the sequence number
-    data_ptr = rx->data + 3; // location of sequence number
+    data_ptr = rx->data + 3;    // location of sequence number
     seq = *data_ptr;
 
     // parse the buffer and extract the dest and src addresses
-    data_ptr = rx->data + 6; // location of dest addr
+    data_ptr = rx->data + 6;                // location of dest addr
     rx->dest_addr = *(U16 *)data_ptr;
     data_ptr += sizeof(U16);
     rx->src_addr = *(U16 *)data_ptr;
@@ -272,13 +272,13 @@ U8 chb_read(chb_rx_data_t *rx)
     // to the front of the buffer. We want to capture the full frame so just keep the frame intact and return the length.
     return len;
 #else
-    // duplicate frame check (dupe check). we want to remove frames that have been already been received since they
-    // are just retries.
+    // duplicate frame check (dupe check). we want to remove frames that have been already been received since they 
+    // are just retries. 
     // note: this dupe check only removes duplicate frames from the previous transfer. if another frame from a different
     // node comes in between the dupes, then the dupe will show up as a received frame.
     if ((seq == prev_seq) && (rx->src_addr == prev_src_addr))
     {
-        // this is a duplicate frame from a retry. the remote node thinks we didn't receive
+        // this is a duplicate frame from a retry. the remote node thinks we didn't receive 
         // it properly. discard.
         return 0;
     }
@@ -294,4 +294,5 @@ U8 chb_read(chb_rx_data_t *rx)
     // finally, return the len of the payload
     return len - CHB_HDR_SZ - CHB_FCS_LEN;
 #endif
+
 }

@@ -43,9 +43,9 @@
 
 // For handling Arduino 1.0 compatibility and backwards compatibility
 #if ARDUINO >= 100
-#include "Arduino.h"
+    #include "Arduino.h"
 #else
-#include "WProgram.h"
+    #include "WProgram.h"
 #endif
 
 #include "chibiUsrCfg.h"
@@ -96,8 +96,9 @@ void chibiSetPAN(panid_t panid, uint16_t pan);
 uint16_t chibiGetPAN(panid_t panid);
 
 #if ((FREAKDUINO_LONG_RANGE == 1) || (SABOTEN == 1) || (ARASHI_ENET_GATEWAY_LR == 1) || (FREAKDUINO1284PLR == 1) || (FREAKUSB1284PLR == 1))
-void chibiHighGainModeEnable();
-void chibiHighGainModeDisable();
+    void chibiHighGainModeEnable();
+    void chibiHighGainModeDisable();
 #endif
 
 #endif
+
