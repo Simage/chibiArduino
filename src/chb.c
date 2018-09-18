@@ -44,6 +44,8 @@ static pcb_t pcb;
 static U8 prev_seq;
 static U16 prev_src_addr;
 
+static U16 networks[2] = {CHB_PAN_ID, CHB_PAN_ID};
+
 /**************************************************************************/
 /*!
 
@@ -129,7 +131,7 @@ static U8 chb_gen_hdr_ex(U8 *hdr, U8 *addr, U8 len, U16 fcf)
     *hdr_ptr++ = pcb.seq++;
 
     // fill out dest pan ID, dest addr, src addr
-    *(U16 *)hdr_ptr = CHB_PAN_ID;
+    *(U16 *)hdr_ptr = chb_get_pan(DEST_PAN); //CHB_PAN_ID;
     hdr_ptr += sizeof(U16);
 
     if ((fcf & FCF_DEST_ADDR) == FCF_IEEE_DEST)
@@ -145,7 +147,7 @@ static U8 chb_gen_hdr_ex(U8 *hdr, U8 *addr, U8 len, U16 fcf)
     // set the source PAN unless PAN conression is enabled
     if (!(fcf & FCF_PAN_COMPRES))
     {
-        *(U16 *)hdr_ptr = 0xFFEF; //CHB_PAN_ID;
+        *(U16 *)hdr_ptr = chb_get_pan(SOURCE_PAN); //CHB_PAN_ID;
         hdr_ptr += sizeof(U16);
     }
 

@@ -386,6 +386,16 @@ void chibiAesTest(uint8_t *key)
     chb_aes_test(key);
 }
 
+void chibiSetPAN(panid_t panid, uint16_t pan)
+{
+    chb_set_pan(panid, pan);
+}
+
+uint16_t chibiGetPAN(panid_t panid)
+{
+    return chb_get_pan(panid);
+}
+
 #if ((FREAKDUINO_LONG_RANGE == 1) || (SABOTEN == 1) || (ARASHI_ENET_GATEWAY_LR == 1) || (FREAKDUINO1284PLR == 1) || (FREAKUSB1284PLR == 1))
 /**************************************************************************/
 /*!

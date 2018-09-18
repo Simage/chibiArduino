@@ -54,6 +54,12 @@
 #define BROADCAST_ADDR ((uint16_t)0xFFFF)
 #define IEEE_BROADCAST ((uint64_t)0xFFFFFFFFFFFFFFFF)
 
+typedef enum
+{
+    SOURCE_PAN = 0,
+    DEST_PAN = 1
+} panid_t;
+
 void chibiInit();
 void chibiSetShortAddr(uint16_t addr);
 uint16_t chibiGetShortAddr();
@@ -85,6 +91,9 @@ void chibiSetMode(uint8_t mode);
 uint16_t chibiBufGetRemaining();
 
 void chibiAesTest(uint8_t *key);
+
+void chibiSetPAN(panid_t panid, uint16_t pan);
+uint16_t chibiGetPAN(panid_t panid);
 
 #if ((FREAKDUINO_LONG_RANGE == 1) || (SABOTEN == 1) || (ARASHI_ENET_GATEWAY_LR == 1) || (FREAKDUINO1284PLR == 1) || (FREAKUSB1284PLR == 1))
 void chibiHighGainModeEnable();

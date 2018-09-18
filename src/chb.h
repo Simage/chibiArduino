@@ -65,6 +65,9 @@ enum
     CHB_INVALID                 = 7
 };
 
+#define SOURCE_PAN  0
+#define DEST_PAN    1
+
 typedef struct
 {
     U16 src_addr;
@@ -97,5 +100,7 @@ void chb_init();
 pcb_t *chb_get_pcb();
 U8 chb_write(U16 addr, U8 *data, U8 len);
 U8 chb_read(chb_rx_data_t *rx);
+void chb_set_pan(U8 pan_id, U16 pan);
+U16 chb_get_pan(U8 pan_id);
 
 #endif
