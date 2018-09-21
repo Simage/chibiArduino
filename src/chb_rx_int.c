@@ -94,20 +94,7 @@ ISR(CHB_RADIO_IRQ)
 
                 if ((state == RX_ON) || (state == RX_AACK_ON) || (state == BUSY_RX_AACK))
                 {
-                    // get the ed measurement
-                    pcb->ed = chb_reg_read(PHY_ED_LEVEL);
-
-                    // get the crc
-                    pcb->crc = (chb_reg_read(PHY_RSSI) & (1<<7)) ? 1 : 0;
-
-                    // if the crc is not valid, then do not read the frame and set the rx flag
-                    if (pcb->crc)
-                    {
-                        // get the data
-                        chb_frame_read();
-                        pcb->rcvd_xfers++;
-                        pcb->data_rcv = true;
-                    }
+                    chb_frame_read();
                 }
                 pcb->trx_end = true;
                 intp_src &= ~CHB_IRQ_TRX_END_MASK;

@@ -91,8 +91,13 @@ typedef struct
 typedef struct
 {
     U8 len;
-    U16 src_addr;
-    U16 dest_addr;
+    U8 ed;
+    U8 rssi;
+    U8 channel;
+    U16 dest_pan;
+    U64 dest_addr;
+    U16 src_pan;
+    U64 src_addr;
     U8 *data;
 } chb_rx_data_t;
 

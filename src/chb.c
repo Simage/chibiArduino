@@ -37,6 +37,7 @@
 #include "chb.h"
 #include "chb_drvr.h"
 #include "chb_buf.h"
+#include "chb_fcf.h"
 
 static pcb_t pcb;
 
@@ -223,7 +224,8 @@ U8 chb_write(U8 *addr, U8 *data, U8 len, U16 fcf)
 /**************************************************************************/
 U8 chb_read(chb_rx_data_t *rx)
 {
-    U8 i, len, seq, *data_ptr;
+    U8 i, len, seq, *data_ptr, hdr_size;
+    U16 fcf;
 
     data_ptr = rx->data;
 
@@ -233,11 +235,16 @@ U8 chb_read(chb_rx_data_t *rx)
     {
         return 0;
     }
+    //read the remaining packet metadata
+    rx->ed = chb_buf_read();
+    rx->rssi = chb_buf_read() & 0x1F;
+    rx->channel = chb_buf_read();
 
 // TEST
 //    printf("%d, %d\n", len, chb_buf_get_len());
 
     *data_ptr++ = len;
+    rx->len = len;
 
     // load the rest of the data into buffer
     for (i=0; i<len; i++)
@@ -250,17 +257,45 @@ U8 chb_read(chb_rx_data_t *rx)
     // we'll use it as temp storage to parse the frame. then move the frame
     // down so that only the payload will be in the buffer.
 
+    data_ptr = rx->data + 1; // location of the frame control fields
+    fcf = *(U16 *)data_ptr;
+    data_ptr += sizeof(U16);
     // extract the sequence number
-    data_ptr = rx->data + 3;    // location of sequence number
-    seq = *data_ptr;
-
+    seq = *data_ptr++;
+    // We always have a destination pan
+    rx->dest_pan = *(U16 *)data_ptr;
+    data_ptr += sizeof(U16);
     // parse the buffer and extract the dest and src addresses
-    data_ptr = rx->data + 6;                // location of dest addr
+    if ((fcf & FCF_DEST_ADDR) == FCF_IEEE_DEST)
+    {
+        rx->dest_addr = *(U64 *)data_ptr;
+        data_ptr += sizeof(U64);
+    }
+    else
+    {
     rx->dest_addr = *(U16 *)data_ptr;
     data_ptr += sizeof(U16);
+    }
+
+    if (!(fcf & FCF_PAN_COMPRES))
+    {
+        rx->src_pan = *(U16 *)data_ptr;
+        data_ptr += sizeof(U16);
+    }
+
+    if ((fcf & FCF_SRC_ADDR) == FCF_IEEE_SRC)
+    {
+        rx->src_addr = *(U64 *)data_ptr;
+        data_ptr += sizeof(U64);
+    }
+    else
+    {
     rx->src_addr = *(U16 *)data_ptr;
     data_ptr += sizeof(U16);
+    }
 
+    // Calculate the header size
+    hdr_size = data_ptr - (rx->data + 1);
     // if the data in the rx buf is 0, then clear the rx_flag. otherwise, keep it raised
     if (!chb_buf_get_len())
     {
@@ -289,10 +324,10 @@ U8 chb_read(chb_rx_data_t *rx)
     }
 
     // move the payload down to the beginning of the data buffer
-    memmove(rx->data, data_ptr, len - CHB_HDR_SZ);
+    memmove(rx->data, data_ptr, len - hdr_size);
 
     // finally, return the len of the payload
-    return len - CHB_HDR_SZ - CHB_FCS_LEN;
+    return len - hdr_size - CHB_FCS_LEN;
 #endif
 
 }

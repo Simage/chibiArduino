@@ -269,9 +269,21 @@ void chb_frame_write(U8 *hdr, U8 hdr_len, U8 *data, U8 data_len)
 /**************************************************************************/
 static void chb_frame_read()
 {
-    U8 i, len, data;
+    U8 i, len, data, ed, rssi, channel;
+    pcb_t *pcb = chb_get_pcb();
 
     CHB_ENTER_CRIT();
+    ed = chb_reg_read(PHY_ED_LEVEL);
+    pcb->ed = ed;
+
+    // get the crc
+    rssi = chb_reg_read(PHY_RSSI);
+    pcb->crc=(rssi & (1<<7)) ? 1 : 0;
+    channel=chb_get_channel();
+
+    // if the crc is not valid, then do not read the frame and set the rx flag
+    if (pcb->crc)
+    {
     CHB_SPI_ENABLE();
 
     /*Send frame read command and read the length.*/
@@ -285,8 +297,11 @@ static void chb_frame_read()
         if (len < (CHB_BUF_SZ - chb_buf_get_len()))
         {
             chb_buf_write(len);
+                chb_buf_write(ed);
+                chb_buf_write(rssi);
+                chb_buf_write(channel);
 
-            for (i=0; i<len; i++)
+                for (i = 0; i < len; i++)
             {
                 data = chb_xfer_byte(0);
                 chb_buf_write(data);
@@ -295,10 +310,9 @@ static void chb_frame_read()
         else
         {
             // this frame will overflow the buffer. toss the data and do some housekeeping
-            pcb_t *pcb = chb_get_pcb();
 
             // read out the data and throw it away
-            for (i=0; i<len; i++)
+                for (i = 0; i < len; i++)
             {
                 chb_xfer_byte(0);
             }
@@ -309,6 +323,10 @@ static void chb_frame_read()
     }
 
     CHB_SPI_DISABLE();
+        pcb->rcvd_xfers++;
+        pcb->data_rcv = true;
+    }
+
     CHB_LEAVE_CRIT();
 }
 
